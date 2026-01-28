@@ -25,7 +25,7 @@ const ActionBtn: React.FC<ActionBtnProps> = (
 		delete: "hover:text-red-500 hover:border-red-500/30 text-red-400",
 	};
 	return(
-		<button type="button" title={title} aria-label={title} onClick={onClick} className={`p-2.5 bg-white dark:bg-brand-border-dark border-2 border-b-4 border-brand-border rounded-xl transition-all active:translate-y-[2px] active:border-b-2 flex items-center justify-center ${colors[variant]} ${className}`}>
+		<button type="button" title={title} aria-label={title} onClick={onClick} className={`p-2.5 bg-white dark:bg-brand-border-dark border-2 border-b-4 border-brand-border rounded-xl transition-all active:translate-y-0.5 active:border-b-2 flex items-center justify-center ${colors[variant]} ${className}`}>
 			{
 				React.cloneElement
 				(
