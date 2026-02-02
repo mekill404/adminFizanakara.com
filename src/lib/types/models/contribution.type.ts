@@ -1,16 +1,14 @@
-import type {ContributionStatus} from "./common.type";
+import { ContributionStatus } from "./common.type";
 import { PaymentResponseDto } from "./payment.type";
 
-interface IBaseContribution {
-    year: number;
-    status: ContributionStatus;
+export interface ContributionCreateDto {
+    year: number; 
+    status?: ContributionStatus;
 }
 
-export interface ContributionCreateDto extends Partial<IBaseContribution> {
+export interface ContributionYearDto {
     year: number;
 }
-
-export interface ContributionYearDto extends Pick<IBaseContribution, 'year'> {}
 
 export interface ContributionUpdateDto {
     amount?: number;
@@ -18,16 +16,17 @@ export interface ContributionUpdateDto {
     memberId: string;
 }
 
+
 export interface ContributionResponseDto {
-    id: string;
-    year: number;
+    id: string;         // Format COT2026-001
+    year: number;       // Year en Java
+    amount: number;     // BigDecimal
     status: ContributionStatus;
-    amount: number;
-    dueDate: string;
-    totalPaid: number;
-    remaining: number;
+    dueDate: string;    // LocalDate
+    totalPaid: number;  // BigDecimal calculé
+    remaining: number;  // BigDecimal calculé
     memberId: string;
     memberName: string;
-    childId?: string;
+    childId?: string;   // Optionnel (pour les mineurs)
     payments: PaymentResponseDto[];
 }

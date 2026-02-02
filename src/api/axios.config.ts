@@ -1,29 +1,41 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import AuthService from '../services/auth.service';
 
-const api = axios.create({
-	baseURL: 'https://fizanakara-cotisation-app.onrender.com/api',
-	headers: {
-		'Content-Type': 'application/json',
-	},
+const axiosInstance = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    headers: { 'Content-Type': 'application/json' }
 });
-api.interceptors.request.use((config) => {
-	const token = localStorage.getItem('accessToken');
-	console.log("Request URL:", config.url, "Token present:", !!token);
-	if (token) {
-		config.headers.Authorization = `Bearer ${token}`;
-	}
-	return config;
+
+axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
-api.interceptors.response.use(
-	(res) => res,
-	(error) => {
-		if (error.response?.status === 401) {
-			localStorage.clear();
-			toast.error("Session expirée");
-		}
-		return Promise.reject(error);
-	}
+
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+                try {
+                    const { accessToken } = await AuthService.refreshToken(refreshToken);
+                    localStorage.setItem('accessToken', accessToken);
+                    return axiosInstance(originalRequest);
+                } catch (refreshError) {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    window.location.href = '/login';
+                }
+            }
+        }
+        return Promise.reject(error);
+    }
 );
 
-export default api;
+export default axiosInstance;

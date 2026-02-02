@@ -1,96 +1,109 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthService } from '../services/auth.service';
-import { LoginRequestDTO, AdminResponseDto } from '../lib/types/models/admin.type';
-import toast from 'react-hot-toast';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { AdminResponseDto, LoginRequestDTO } from "../lib/types/models/admin.type";
+import { AuthService } from "../services/auth.service";
+import toast from "react-hot-toast";
 
+// 1. Définition de la forme du contexte
 interface AuthContextType {
-	user: AdminResponseDto | null;
-	isAuthenticated: boolean;
-	isSuperAdmin: boolean;
-	isAdmin: boolean;
-	loading: boolean;
-	login: (credentials: LoginRequestDTO) => Promise<void>;
-	logout: () => void;
-	refreshUser: () => Promise<void>;
+    user: AdminResponseDto | null;
+    token: string | null;
+    isAuthenticated: boolean;
+    isSuperAdmin: boolean;
+    isLoading: boolean;
+    login: (credentials: LoginRequestDTO) => Promise<void>;
+    logout: () => void;
+    refreshUser: () => Promise<void>;
 }
 
+// 2. Création du contexte avec une valeur par défaut
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const navigate = useNavigate();
-	const [user, setUser] = useState<AdminResponseDto | null>(null);
-	const [loading, setLoading] = useState(true);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<AdminResponseDto | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem("auth_token"));
+    const [isLoading, setIsLoading] = useState(true);
 
-	const refreshUser = useCallback(async () => {
-		const token = localStorage.getItem('accessToken');
-		if (!token) {
-			setLoading(false);
-			return;
-		}
+    // Initialisation : Vérifier si un utilisateur est déjà connecté
+    useEffect(() => {
+        const initAuth = async () => {
+            const savedToken = localStorage.getItem("auth_token");
+            if (savedToken) {
+                try {
+                    // On récupère les infos de l'admin via la route /admins/me
+                    const userData = await AuthService.getCurrentAdmin();
+                    setUser(userData);
+                } catch (error) {
+                    console.error("Session expirée ou invalide");
+                    logout();
+                }
+            }
+            setIsLoading(false);
+        };
+        initAuth();
+    }, []);
 
-		try {
-			const userData = await AuthService.getMe();
-			setUser(userData);
-			localStorage.setItem('userData', JSON.stringify(userData));
-			localStorage.setItem('userRole', userData.role);
-		} catch (error) {
-			console.error("Session expirée ou invalide");
-			logout();
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+    // Fonction de connexion
+    const login = async (credentials: LoginRequestDTO) => {
+        try {
+            const response = await AuthService.login(credentials);
+            // On attend de la réponse : { token: string, admin: AdminResponseDto }
+            const { accessToken, admin } = response.data;
 
-	useEffect(() => {
-		refreshUser();
-	}, [refreshUser]);
+            localStorage.setItem("auth_token", accessToken);
+            setToken(accessToken);
+            setUser(admin);
+            
+            toast.success(`Bienvenue, ${admin.firstName} !`);
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Erreur d'authentification";
+            toast.error(message);
+            throw error;
+        }
+    };
 
-	const login = async (credentials: LoginRequestDTO) => {
-		try {
-			const data = await AuthService.login(credentials);
-			localStorage.setItem('accessToken', data.token);
-			localStorage.setItem('userData', JSON.stringify(data.admin));
-			localStorage.setItem('userRole', data.admin.role);
+    // Fonction de déconnexion
+    const logout = () => {
+        localStorage.removeItem("auth_token");
+        setToken(null);
+        setUser(null);
+        toast.success("Déconnexion réussie");
+    };
 
-			setUser(data.admin);
-			toast.success(`Bienvenue, ${data.admin.firstName} !`);
-			navigate('/admin/dashboard');
-		} catch (error: any) {
-			toast.error(error.response?.data?.message || "Identifiants invalides");
-			throw error;
-		}
-	};
+    // Rafraîchir les données utilisateur (ex: après mise à jour du profil)
+    const refreshUser = async () => {
+        try {
+            const userData = await AuthService.getCurrentAdmin();
+            setUser(userData);
+        } catch (error) {
+            console.error("Échec du rafraîchissement");
+        }
+    };
 
-	const logout = () => {
-		localStorage.clear();
-		setUser(null);
-		navigate('/login');
-		toast.success("Déconnexion réussie");
-	};
+    // Dérivations d'état pratiques
+    const isAuthenticated = !!token && !!user;
+    const isSuperAdmin = user?.role === "SUPERADMIN";
 
-	const value = {
-		user,
-		isAuthenticated: !!user,
-		isSuperAdmin: user?.role === 'SUPERADMIN',
-		isAdmin: user?.role === 'ADMIN' || user?.role === 'SUPERADMIN',
-		loading,
-		login,
-		logout,
-		refreshUser
-	};
-
-	if (loading) return (
-		<div className="h-screen w-full flex items-center justify-center bg-brand-bg">
-			<div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-primary"></div>
-		</div>
-	);
-
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={{ 
+            user, 
+            token, 
+            isAuthenticated, 
+            isSuperAdmin, 
+            isLoading, 
+            login, 
+            logout, 
+            refreshUser 
+        }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
+// 3. Hook personnalisé pour utiliser le contexte facilement
 export const useAuth = () => {
-	const context = useContext(AuthContext);
-	if (!context) throw new Error("useAuth doit être utilisé dans un AuthProvider");
-	return context;
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
+    }
+    return context;
 };

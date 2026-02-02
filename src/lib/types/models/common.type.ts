@@ -1,8 +1,8 @@
 export type Gender = "MALE" | "FEMALE";
 export type MemberStatus = "WORKER" | "STUDENT";
-export type PaymentStatus = "COMPLETED" | "PENDING";
 export type Role = "SUPERADMIN" | "ADMIN";
 export type ContributionStatus = "PENDING" | "PARTIAL" | "PAID" | "OVERDUE";
+export type PaymentStatus = "COMPLETED" | "PENDING" | "REFUNDED";
 
 export interface DistrictDto {
     id?: number;
