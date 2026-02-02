@@ -1,56 +1,41 @@
-import api from '../api/axios.config';
-import { 
-    LoginRequestDTO, 
-    RegisterRequestDTO, 
-    AdminResponseDto, 
-    UpdateAdminDto 
-} from '../lib/types/models/admin.type';
+import axiosInstance from '../api/axios.config';
+import { AuthResponse } from '../lib/types/models/admin.type';
 
-export const AuthService = {
+const AuthService = {
+  login: async (credentials: any): Promise<AuthResponse> => {
+    const response = await axiosInstance.post<AuthResponse>('/api/login', credentials);
+    return response.data;
+  },
 
-    login: async (credentials: LoginRequestDTO): Promise<{ token: string; admin: AdminResponseDto }> => {
-        const response = await api.post('/login', credentials);
-        if (response.data.token) {
-            localStorage.setItem('auth_token', response.data.token);
-        }
-        return response.data;
-    },
+  register: async (data: any): Promise<AdminProfile> => {
+    const response = await axiosInstance.post<AdminProfile>('/api/register', data);
+    return response.data;
+  },
 
+  refreshToken: async (token: string): Promise<{ accessToken: string }> => {
+    const response = await axiosInstance.post<{ accessToken: string }>('/api/refresh', { refreshToken: token });
+    return response.data;
+  },
 
-    register: async (data: RegisterRequestDTO): Promise<AdminResponseDto> => {
-        const response = await api.post('/register', data);
-        return response.data;
-    },
+  getMe: async (): Promise<AuthResponse> => {
+    const response = await axiosInstance.get<AuthResponse>('/api/admins/me');
+    return response.data;
+  },
 
+  updateMe: async (data: any): Promise<{ user: AuthResponse; message: string }> => {
+    const response = await axiosInstance.patch('/api/admins/me', data);
+    return response.data;
+  },
 
-    getMe: async (): Promise<AdminResponseDto> => {
-        const response = await api.get('/admins/me');
-        return response.data;
-    },
+  forgotPassword: async (email: string): Promise<string> => {
+    const response = await axiosInstance.post('/api/forgot-password', { email });
+    return response.data;
+  },
 
-
-    updateMe: async (data: UpdateAdminDto): Promise<AdminResponseDto> => {
-        const response = await api.patch('/admins/me', data);
-        return response.data;
-    },
-
-
-    forgotPassword: async (email: string) => {
-        return await api.post('/forgot-password', { email });
-    },
-
-    verifyResetToken: async (token: string) => {
-        const response = await api.get(`/auth/verify-reset-token`, { params: { token } });
-        return response.data;
-    },
-
-    resetPassword: async (data: { token: string; newPassword: string }) => {
-        return await api.post('/reset-password', data);
-    },
-
-
-    logout: () => {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
-    }
+  resetPassword: async (data: any): Promise<string> => {
+    const response = await axiosInstance.post('/api/reset-password', data);
+    return response.data;
+  }
 };
+
+export default AuthService;

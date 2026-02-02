@@ -81,20 +81,20 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/login",
-                    "/forgot-password",
-                    "/reset-password"
+                    "/api/login",
+                    "/api/forgot-password",
+                    "/api/reset-password"
                 ).permitAll()
-                            .requestMatchers("/register").hasRole("SUPERADMIN")
-                .requestMatchers("/admins/me")
+                            .requestMatchers("/api/register").hasRole("SUPERADMIN")
+                .requestMatchers("/api/admins/me")
                 .authenticated()
-                .requestMatchers("/admins/districts/**")
+                .requestMatchers("/api/admins/districts/**")
                 .authenticated()
-                .requestMatchers("/admins/tributes/**")
+                .requestMatchers("/api/admins/tributes/**")
                 .authenticated()
-                .requestMatchers("/admins/members/**")
+                .requestMatchers("/api/admins/members/**")
                 .authenticated()
-                .requestMatchers("/admins/children/**")
+                .requestMatchers("/api/admins/children/**")
                 .authenticated()
                 .anyRequest().authenticated()
                 )
