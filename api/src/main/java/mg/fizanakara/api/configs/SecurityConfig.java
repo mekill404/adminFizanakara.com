@@ -92,7 +92,7 @@ public class SecurityConfig {
                 .authenticated()
                 .requestMatchers("/admins/tributes/**")
                 .authenticated()
-                .requestMatchers("/admins/members/**")
+                .requestMatchers("/admins/persons/**")
                 .authenticated()
                 .requestMatchers("/admins/children/**")
                 .authenticated()
