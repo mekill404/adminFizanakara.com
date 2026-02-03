@@ -83,7 +83,9 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",
                     "/forgot-password",
-                    "/reset-password"
+                    "/reset-password",
+                        "/keep-alive",
+                            "/health"
                 ).permitAll()
                             .requestMatchers("/register").hasRole("SUPERADMIN")
                 .requestMatchers("/admins/me")
