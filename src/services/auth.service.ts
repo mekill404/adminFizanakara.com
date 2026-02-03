@@ -1,9 +1,9 @@
 import api from '../api/axios.config';
-import { 
-    LoginRequestDTO, 
-    RegisterRequestDTO, 
-    AdminResponseDto, 
-    UpdateAdminDto 
+import {
+    LoginRequestDTO,
+    RegisterRequestDTO,
+    AdminResponseDto,
+    UpdateAdminDto
 } from '../lib/types/models/admin.type';
 
 export const AuthService = {
