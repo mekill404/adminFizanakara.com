@@ -2,19 +2,12 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const api = axios.create({
-<<<<<<< HEAD
   baseURL: import.meta.env.VITE_API_BASE_URL || "https://fizanakara-application.onrender.com/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
     'Accept': 'application/json',
   },
-=======
-	baseURL: 'http://localhost:3000/api',
-	headers: {
-		'Content-Type': 'application/json',
-	},
->>>>>>> 7e5895c5827bad96996ba62e5fbdf0678eccdc96
 });
 
 api.interceptors.request.use(

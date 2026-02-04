@@ -1,21 +1,21 @@
 // hooks/useMemberForm.ts
 import { useState, useCallback, useEffect } from 'react';
-import type { PersonDto, MemberStatus, Gender } from '../lib/types/models/person.type';
-
+import type { PersonModel} from '../lib/types/models/person.models.types';
+import { MemberStatus, Gender } from '../lib/types/enum.types';
 interface UseMemberFormProps {
   onSubmitSuccess?: () => void;
   memberToEdit?: any;
 }
 
 export const useMemberForm = ({ onSubmitSuccess, memberToEdit }: UseMemberFormProps) => {
-  const [formData, setFormData] = useState<PersonDto>({
+  const [formData, setFormData] = useState<PersonModel>({
     firstName: '',
     lastName: '',
     birthDate: new Date().toISOString().split('T')[0],
     gender: 'MALE' as Gender,
     imageUrl: '',
     phoneNumber: '',
-    status: 'PENDING' as MemberStatus,
+    status: 'WORKER' as MemberStatus,
     districtId: 0,
     tributeId: 0,
     parentId: ''
@@ -34,7 +34,7 @@ export const useMemberForm = ({ onSubmitSuccess, memberToEdit }: UseMemberFormPr
         gender: memberToEdit.gender || 'MALE',
         imageUrl: memberToEdit.imageUrl || '',
         phoneNumber: memberToEdit.phoneNumber || '',
-        status: memberToEdit.status || 'PENDING',
+        status: memberToEdit.status || 'WORKER',
         districtId: memberToEdit.districtId || 0,
         tributeId: memberToEdit.tributeId || 0,
         parentId: memberToEdit.parentId || ''
@@ -48,7 +48,7 @@ export const useMemberForm = ({ onSubmitSuccess, memberToEdit }: UseMemberFormPr
         gender: 'MALE' as Gender,
         imageUrl: '',
         phoneNumber: '',
-        status: 'PENDING' as MemberStatus,
+        status: 'WORKER' as MemberStatus,
         districtId: 0,
         tributeId: 0,
         parentId: ''

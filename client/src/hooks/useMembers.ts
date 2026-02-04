@@ -1,24 +1,24 @@
 import { useState, useCallback } from 'react';
-import PersonService, { PersonFilterOptions } from '../services/person.services';
-import type { PersonDto, PersonResponseDto, MemberStatus } from '../lib/types/models/person.type';
+import MemberService from '../services/member.services';
+import type { PersonModel, PersonResponseModel, MemberStatus } from '../lib/types/models/person.models.types';
 
 /**
  * Hook personnalisé pour la gestion des personnes
  */
 export const usePersons = () => {
-  const [persons, setPersons] = useState<PersonResponseDto[]>([]);
-  const [currentPerson, setCurrentPerson] = useState<PersonResponseDto | null>(null);
+  const [persons, setPersons] = useState<PersonResponseModel[]>([]);
+  const [currentPerson, setCurrentPerson] = useState<PersonResponseModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
    * Charge toutes les personnes
    */
-  const loadAllPersons = useCallback(async (filters?: PersonFilterOptions) => {
+  const loadAllPersons = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await PersonService.getAllPersons(filters);
+      const data = await MemberService.getAll();
       setPersons(data);
       return data;
     } catch (err: any) {
@@ -36,7 +36,7 @@ export const usePersons = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await PersonService.getPersonById(id);
+      const data = await MemberService.getById(id);
       setCurrentPerson(data);
       return data;
     } catch (err: any) {
@@ -50,11 +50,11 @@ export const usePersons = () => {
   /**
    * Crée une nouvelle personne
    */
-  const createPerson = useCallback(async (personData: PersonDto) => {
+  const createPerson = useCallback(async (personData: PersonModel) => {
     setLoading(true);
     setError(null);
     try {
-      const newPerson = await PersonService.createPerson(personData);
+      const newPerson = await MemberService.create(personData);
       setPersons(prev => [...prev, newPerson]);
       return newPerson;
     } catch (err: any) {
@@ -68,11 +68,11 @@ export const usePersons = () => {
   /**
    * Ajoute un enfant à un parent
    */
-  const addChildToPerson = useCallback(async (parentId: string, childData: PersonDto) => {
+  const addChildToPerson = useCallback(async (parentId: string, childData: PersonModel) => {
     setLoading(true);
     setError(null);
     try {
-      const child = await PersonService.addChild(parentId, childData);
+      const child = await MemberService.addChild(parentId, childData);
       
       // Mettre à jour le parent dans la liste
       setPersons(prev => prev.map(person => {
@@ -98,11 +98,11 @@ export const usePersons = () => {
   /**
    * Met à jour une personne
    */
-  const updatePerson = useCallback(async (id: string, updateData: Partial<PersonDto>) => {
+  const updatePerson = useCallback(async (id: string, updateData: Partial<PersonModel>) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedPerson = await PersonService.updatePerson(id, updateData);
+      const updatedPerson = await MemberService.update(id, updateData as PersonModel);
       
       // Mettre à jour dans la liste
       setPersons(prev => prev.map(person => 
@@ -130,7 +130,7 @@ export const usePersons = () => {
     setLoading(true);
     setError(null);
     try {
-      const promotedPerson = await PersonService.promoteToActiveMember(id);
+      const promotedPerson = await MemberService.promote(id);
       
       // Mettre à jour dans la liste
       setPersons(prev => prev.map(person => 
@@ -153,7 +153,7 @@ export const usePersons = () => {
     setLoading(true);
     setError(null);
     try {
-      await PersonService.deletePerson(id);
+      await MemberService.delete(id);
       
       // Retirer de la liste
       setPersons(prev => prev.filter(person => person.id !== id));
@@ -177,7 +177,7 @@ export const usePersons = () => {
     setLoading(true);
     setError(null);
     try {
-      const children = await PersonService.getChildrenByParentId(parentId);
+      const children = await MemberService.getChildren(parentId);
       
       // Mettre à jour le parent dans la liste
       setPersons(prev => prev.map(person => {
@@ -188,30 +188,6 @@ export const usePersons = () => {
       }));
       
       return children;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Recherche des personnes
-   */
-  const searchPersons = useCallback(async (criteria: {
-    query?: string;
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
-    status?: MemberStatus;
-  }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const results = await PersonService.searchPersons(criteria);
-      setPersons(results);
-      return results;
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -252,7 +228,6 @@ export const usePersons = () => {
     promoteToActiveMember,
     deletePerson,
     loadChildren,
-    searchPersons,
     updatePersonStatus,
     clearData,
     

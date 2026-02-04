@@ -8,7 +8,7 @@ import {
 } from "react-icons/ai";
 import { useMemberLogic } from "../hooks/useMemberLogic";
 import { calculateAge, getFullName } from "../lib/helper/member.helper";
-import type { PersonResponseDto } from "../lib/types/models/person.type";
+import type { PersonResponseModel } from "../lib/types/models/person.models.types";
 import { THEME } from "../styles/theme";
 import { useAuth } from "../context/AuthContext";
 
@@ -43,10 +43,10 @@ const MemberManagement: React.FC = () => {
     } = useMemberLogic();
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [viewMember, setViewMember] = useState<PersonResponseDto | null>(null);
+    const [viewMember, setViewMember] = useState<PersonResponseModel | null>(null);
     const [formModal, setFormModal] = useState<{ 
         isOpen: boolean; 
-        memberToEdit: PersonResponseDto | null; 
+        memberToEdit: PersonResponseModel | null; 
     }>({
         isOpen: false,
         memberToEdit: null

@@ -5,22 +5,23 @@ import {
   AiOutlineSave, AiOutlineClose, AiOutlineGlobal, AiOutlineTeam,
   AiOutlineUser, AiOutlineInfoCircle, AiOutlineCamera, AiOutlineCalendar
 } from 'react-icons/ai';
-import Button from '../shared/Button';
-import Input from '../shared/Input';
-import Select from '../shared/Select';
-import { getImageUrl } from '../../lib/constant/constant';
-import { useMemberLogic } from '../../hooks/useMemberLogic';
-import { DistrictService } from '../../services/district.service';
-import { TributeService } from '../../services/tribute.service';
-import { DistrictDto, TributeDto } from '../../lib/types/models/common.type';
-import type { PersonDto, PersonResponseDto } from '../../lib/types/models/person.type';
+import Button from '../../ui/Button';
+import Input from '../../ui/Input';
+import Select from '../../ui/Select';
+import { getImageUrl } from '../../../lib/constant/constant';
+import { useMemberLogic } from '../../../hooks/useMemberLogic';
+import DistrictService from '../../../services/district.services';
+import TributeService from '../../../services/tribute.services';
+import { DistrictModel, TributeModel } from '../../../lib/types/models/localisation.models.types';
+import type { PersonModel, PersonResponseModel } from '../../../lib/types/models/person.models.types';
+import { Gender, MemberStatus } from '../../../lib/types/enum.types';
 
 interface MemberFormProps {
   isOpen: boolean;
   onClose: () => void;
-  memberToEdit: PersonResponseDto | null;
+  memberToEdit: PersonResponseModel | null;
   onSuccess: () => void;
-  allMembers: PersonResponseDto[];
+  allMembers: PersonResponseModel[];
 }
 
 const MemberForm: React.FC<MemberFormProps> = ({ 
@@ -30,10 +31,10 @@ const MemberForm: React.FC<MemberFormProps> = ({
   onSuccess, 
   allMembers 
 }) => {
-  const [districts, setDistricts] = useState<DistrictDto[]>([]);
-  const [tributes, setTributes] = useState<TributeDto[]>([]);
+  const [districts, setDistricts] = useState<DistrictModel[]>([]);
+  const [tributes, setTributes] = useState<TributeModel[]>([]);
   const [isChildMode, setIsChildMode] = useState(false);
-  const [formData, setFormData] = useState<Partial<PersonDto>>({});
+  const [formData, setFormData] = useState<Partial<PersonModel>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -71,10 +72,10 @@ const MemberForm: React.FC<MemberFormProps> = ({
           firstName: '',
           lastName: '',
           birthDate: new Date().toISOString().split('T')[0],
-          gender: 'MALE',
+          gender: Gender.MALE,
           imageUrl: '',
           phoneNumber: '',
-          status: 'PENDING',
+          status: MemberStatus.WORKER,
           districtId: 0,
           tributeId: 0,
           parentId: ''
@@ -104,7 +105,6 @@ const MemberForm: React.FC<MemberFormProps> = ({
       [name]: type === 'number' ? parseInt(value, 10) : value
     }));
 
-    // Effacer l'erreur
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -120,7 +120,6 @@ const MemberForm: React.FC<MemberFormProps> = ({
     setErrors({});
 
     try {
-      // Validation basique
       const newErrors: Record<string, string> = {};
       if (!formData.firstName?.trim()) newErrors.firstName = 'Le prénom est requis';
       if (!formData.lastName?.trim()) newErrors.lastName = 'Le nom est requis';
@@ -142,11 +141,9 @@ const MemberForm: React.FC<MemberFormProps> = ({
       }
 
       if (memberToEdit) {
-        // Mettre à jour
-        await updateMember(memberToEdit.id, formData as PersonDto);
+        await updateMember(memberToEdit.id, formData as PersonModel);
       } else {
-        // Créer
-        await createMember(formData as PersonDto);
+        await createMember(formData as PersonModel);
       }
 
       onSuccess();
@@ -266,7 +263,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
             </div>
             
             <div className="lg:col-span-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input 
                   label="Prénom" 
                   name="firstName" 
@@ -308,8 +305,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
                   onChange={handleChange}
                   options={[
                     { value: 'MALE', label: 'Masculin' }, 
-                    { value: 'FEMALE', label: 'Féminin' },
-                    { value: 'OTHER', label: 'Autre' }
+                    { value: 'FEMALE', label: 'Féminin' }
                   ]}
                   disabled={loading}
                   required
@@ -348,13 +344,11 @@ const MemberForm: React.FC<MemberFormProps> = ({
                 <Select 
                   label="Statut" 
                   name="status" 
-                  value={formData.status || 'PENDING'} 
+                  value={formData.status || 'WORKER'} 
                   onChange={handleChange}
                   options={[
-                    { value: 'ACTIVE', label: 'Actif' },
-                    { value: 'INACTIVE', label: 'Inactif' },
-                    { value: 'PENDING', label: 'En attente' },
-                    { value: 'DECEASED', label: 'Décédé' }
+                    { value: 'WORKER', label: 'Travailleur' },
+                    { value: 'STUDENT', label: 'Étudiant' }
                   ]}
                   disabled={loading}
                 />

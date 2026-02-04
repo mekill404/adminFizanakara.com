@@ -1,14 +1,14 @@
 // hooks/useMemberLogic.ts
 import { useState, useEffect, useCallback } from 'react';
-import PersonService from '../services/person.services';
-import type { PersonResponseDto, PersonDto} from '../lib/types/models/person.type';
+import MemberService from '../services/member.services';
+import type { PersonResponseModel, PersonModel} from '../lib/types/models/person.models.types';
 
 /**
  * Hook personnalisé pour la logique des membres
  */
 export const useMemberLogic = () => {
-  const [members, setMembers] = useState<PersonResponseDto[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<PersonResponseDto[]>([]);
+  const [members, setMembers] = useState<PersonResponseModel[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<PersonResponseModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -24,7 +24,7 @@ export const useMemberLogic = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await PersonService.getAllPersons();
+      const data = await MemberService.getAll();
       setMembers(data);
       setFilteredMembers(data);
     } catch (err: any) {
@@ -84,11 +84,11 @@ export const useMemberLogic = () => {
   }, [applyFilters]);
 
   // Actions CRUD
-  const createMember = useCallback(async (memberData: PersonDto) => {
+  const createMember = useCallback(async (memberData: PersonModel) => {
     setLoading(true);
     setError(null);
     try {
-      const newMember = await PersonService.createPerson(memberData);
+      const newMember = await MemberService.create(memberData);
       setMembers(prev => [...prev, newMember]);
       return newMember;
     } catch (err: any) {
@@ -99,11 +99,11 @@ export const useMemberLogic = () => {
     }
   }, []);
 
-  const updateMember = useCallback(async (id: string, updateData: Partial<PersonDto>) => {
+  const updateMember = useCallback(async (id: string, updateData: Partial<PersonModel>) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedMember = await PersonService.updatePerson(id, updateData);
+      const updatedMember = await MemberService.update(id, updateData as PersonModel);
       setMembers(prev => prev.map(member => 
         member.id === id ? updatedMember : member
       ));
@@ -120,7 +120,7 @@ export const useMemberLogic = () => {
     setLoading(true);
     setError(null);
     try {
-      await PersonService.deletePerson(id);
+      await MemberService.delete(id);
       setMembers(prev => prev.filter(member => member.id !== id));
     } catch (err: any) {
       setError(err.message);
@@ -135,7 +135,7 @@ export const useMemberLogic = () => {
     setError(null);
     try {
       // Supprimer un par un (ou implémenter un endpoint batch)
-      await Promise.all(ids.map(id => PersonService.deletePerson(id)));
+      await Promise.all(ids.map(id => MemberService.delete(id)));
       setMembers(prev => prev.filter(member => !ids.includes(member.id)));
     } catch (err: any) {
       setError(err.message);
@@ -149,7 +149,7 @@ export const useMemberLogic = () => {
     setLoading(true);
     setError(null);
     try {
-      const promotedMember = await PersonService.promoteToActiveMember(id);
+      const promotedMember = await MemberService.promote(id);
       setMembers(prev => prev.map(member => 
         member.id === id ? promotedMember : member
       ));
@@ -162,11 +162,11 @@ export const useMemberLogic = () => {
     }
   }, []);
 
-  const addChild = useCallback(async (parentId: string, childData: PersonDto) => {
+  const addChild = useCallback(async (parentId: string, childData: PersonModel) => {
     setLoading(true);
     setError(null);
     try {
-      const child = await PersonService.addChild(parentId, childData);
+      const child = await MemberService.addChild(parentId, childData);
       // Mettre à jour le parent dans la liste
       setMembers(prev => prev.map(member => {
         if (member.id === parentId) {

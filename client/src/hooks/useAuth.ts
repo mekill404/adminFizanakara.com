@@ -1,7 +1,7 @@
 // hooks/useAuth.ts
 import { useState, useEffect, useCallback } from 'react';
-import AdminService from '../services/auth.service';
-import type { LoginRequestDto, RegisterRequestDto, UpdateAdminDto, LoginResponse } from '../lib/types/models/admin.type';
+import { AuthService } from '../services/auth.service';
+import type { LoginRequestModel, RegisterRequestModel, AdminUpdateModel } from '../lib/types/models/admin.models.types';
 
 /**
  * Hook personnalisé pour la gestion de l'authentification
@@ -27,14 +27,15 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = useCallback(async (credentials: LoginRequestDto): Promise<LoginResponse> => {
+  const login = useCallback(async (credentials: LoginRequestModel) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await AdminService.login(credentials);
+      const response = await AuthService.login(credentials);
       setUser(response.user);
       setIsAuthenticated(true);
       setIsSuperAdmin(response.role === 'SUPERADMIN');
+      localStorage.setItem('user', JSON.stringify(response.user));
       return response;
     } catch (err: any) {
       setError(err.message);
@@ -45,17 +46,17 @@ export const useAuth = () => {
   }, []);
 
   const logout = useCallback(() => {
-    AdminService.logout();
+    AuthService.logout();
     setUser(null);
     setIsAuthenticated(false);
     setIsSuperAdmin(false);
   }, []);
 
-  const register = useCallback(async (registerData: RegisterRequestDto) => {
+  const register = useCallback(async (registerData: RegisterRequestModel) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await AdminService.register(registerData);
+      const response = await AuthService.register(registerData);
       return response;
     } catch (err: any) {
       setError(err.message);
@@ -65,14 +66,14 @@ export const useAuth = () => {
     }
   }, []);
 
-  const updateProfile = useCallback(async (updateData: UpdateAdminDto) => {
+  const updateProfile = useCallback(async (updateData: AdminUpdateModel) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await AdminService.updateMyProfile(updateData);
+      const response = await AuthService.updateMe(updateData);
       // Mettre à jour l'utilisateur localement
-      if (response.user) {
-        setUser((prev: any) => ({ ...prev, ...response.user }));
+      if (response) {
+        setUser((prev: any) => ({ ...prev, ...response }));
       }
       return response;
     } catch (err: any) {
