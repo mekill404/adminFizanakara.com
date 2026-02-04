@@ -81,17 +81,11 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-<<<<<<< HEAD
-                    "/api/login",
-                    "/api/forgot-password",
-                    "/api/reset-password"
-=======
                     "/login",
                     "/forgot-password",
                     "/reset-password",
                         "/keep-alive",
                             "/health"
->>>>>>> 7e5895c5827bad96996ba62e5fbdf0678eccdc96
                 ).permitAll()
                             .requestMatchers("/api/register").hasRole("SUPERADMIN")
                 .requestMatchers("/api/admins/me")
@@ -100,11 +94,7 @@ public class SecurityConfig {
                 .authenticated()
                 .requestMatchers("/api/admins/tributes/**")
                 .authenticated()
-<<<<<<< HEAD
-                .requestMatchers("/api/admins/members/**")
-=======
                 .requestMatchers("/admins/persons/**")
->>>>>>> 7e5895c5827bad96996ba62e5fbdf0678eccdc96
                 .authenticated()
                 .requestMatchers("/api/admins/children/**")
                 .authenticated()
