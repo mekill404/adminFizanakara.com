@@ -1,21 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { AdminResponseDto, LoginRequestDTO } from "../lib/types/models/admin.type";
-import { AuthService } from "../services/auth.service";
+// Importation avec les noms corrigés (Dto au lieu de DTO)
+import { AdminResponseDto, LoginRequestDto } from "../lib/types/models/admin.type";
+import AuthService from "../services/auth.service";
 import toast from "react-hot-toast";
 
-// 1. Définition de la forme du contexte
 interface AuthContextType {
     user: AdminResponseDto | null;
     token: string | null;
     isAuthenticated: boolean;
     isSuperAdmin: boolean;
     isLoading: boolean;
-    login: (credentials: LoginRequestDTO) => Promise<void>;
+    login: (credentials: LoginRequestDto) => Promise<void>;
     logout: () => void;
     refreshUser: () => Promise<void>;
 }
 
-// 2. Création du contexte avec une valeur par défaut
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -23,18 +22,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [token, setToken] = useState<string | null>(localStorage.getItem("auth_token"));
     const [isLoading, setIsLoading] = useState(true);
 
-    // Initialisation : Vérifier si un utilisateur est déjà connecté
     useEffect(() => {
         const initAuth = async () => {
             const savedToken = localStorage.getItem("auth_token");
             if (savedToken) {
                 try {
-                    // On récupère les infos de l'admin via la route /admins/me
-                    const userData = await AuthService.getCurrentAdmin();
+                    // Récupération via /admins/me
+                    const userData = await AuthService.getMe();
                     setUser(userData);
                 } catch (error) {
                     console.error("Session expirée ou invalide");
-                    logout();
+                    handleLogoutSilent();
                 }
             }
             setIsLoading(false);
@@ -42,11 +40,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         initAuth();
     }, []);
 
-    // Fonction de connexion
-    const login = async (credentials: LoginRequestDTO) => {
+    const login = async (credentials: LoginRequestDto) => {
         try {
             const response = await AuthService.login(credentials);
-            // On attend de la réponse : { token: string, admin: AdminResponseDto }
+            // On s'assure que la structure match avec le retour du backend Spring
             const { accessToken, admin } = response.data;
 
             localStorage.setItem("auth_token", accessToken);
@@ -55,32 +52,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             toast.success(`Bienvenue, ${admin.firstName} !`);
         } catch (error: any) {
-            const message = error.response?.data?.message || "Erreur d'authentification";
-            toast.error(message);
+            const message = error.response?.data?.message || "Identifiants invalides";
+            toast.error(message.toUpperCase());
             throw error;
         }
     };
 
-    // Fonction de déconnexion
-    const logout = () => {
+    /**
+     * Version silencieuse pour l'initialisation (évite les toasts au chargement)
+     */
+    const handleLogoutSilent = () => {
         localStorage.removeItem("auth_token");
         setToken(null);
         setUser(null);
-        toast.success("Déconnexion réussie");
     };
 
-    // Rafraîchir les données utilisateur (ex: après mise à jour du profil)
+    const logout = () => {
+        handleLogoutSilent();
+        toast.success("DÉCONNEXION RÉUSSIE");
+    };
+
     const refreshUser = async () => {
         try {
-            const userData = await AuthService.getCurrentAdmin();
+            const userData = await AuthService.getMe();
             setUser(userData);
         } catch (error) {
-            console.error("Échec du rafraîchissement");
+            console.error("Échec du rafraîchissement des données admin");
         }
     };
 
-    // Dérivations d'état pratiques
+    // Dérivations d'état
     const isAuthenticated = !!token && !!user;
+    
+    /**
+     * Vérification du rôle Super Admin. 
+     * Note: On compare avec la valeur exacte de votre Enum Java.
+     */
     const isSuperAdmin = user?.role === "SUPERADMIN";
 
     return (
@@ -99,7 +106,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 };
 
-// 3. Hook personnalisé pour utiliser le contexte facilement
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
