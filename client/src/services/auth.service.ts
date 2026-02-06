@@ -1,4 +1,4 @@
-import api from '../api/axios.config';
+import api from '../api/axios.config'; // Utiliser api, pas authApi
 import {
     LoginRequestModel,
     RegisterRequestModel,
@@ -7,8 +7,8 @@ import {
 } from '../lib/types/models/admin.models.types';
 
 export const AuthService = {
-
     login: async (credentials: LoginRequestModel) => {
+        // POST sur /api/login (api ajoute déjà /api)
         const response = await api.post('/login', credentials);
         if (response.data.accessToken) {
             localStorage.setItem('accessToken', response.data.accessToken);
@@ -17,38 +17,30 @@ export const AuthService = {
         return response.data;
     },
 
-
     register: async (data: RegisterRequestModel): Promise<AdminResponseModel> => {
         const response = await api.post('/register', data);
         return response.data;
     },
-
 
     getMe: async (): Promise<AdminResponseModel> => {
         const response = await api.get('/admins/me');
         return response.data;
     },
 
-
     updateMe: async (data: AdminUpdateModel): Promise<AdminResponseModel> => {
         const response = await api.patch('/admins/me', data);
         return response.data;
     },
 
-
     forgotPassword: async (email: string) => {
+        // POST sur /api/forgot-password
         return await api.post('/forgot-password', { email });
     },
 
-    verifyResetToken: async (token: string) => {
-        const response = await api.get(`/auth/verify-reset-token`, { params: { token } });
-        return response.data;
-    },
-
     resetPassword: async (data: { token: string; newPassword: string }) => {
+        // POST sur /api/reset-password
         return await api.post('/reset-password', data);
     },
-
 
     logout: () => {
         localStorage.removeItem('accessToken');

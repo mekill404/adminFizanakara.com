@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AiOutlineMail, AiOutlineLock, AiOutlineSafetyCertificate } from 'react-icons/ai';
 import { useAuth } from '../context/AuthContext';
-import { loginSchema } from '../lib/schemas/admin.schema';
+import { loginSchema } from '../lib/validators/admin.validator';
 import type { LoginRequestModel } from '../lib/types/models/admin.models.types';
+import { getErrorMessage } from '../lib/helper/errorHelpers';
 
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -41,14 +42,8 @@ const Login: React.FC = () => {
 			// Redirection gérée dans le useEffect via isAuthenticated
 		} catch (error: any) {
 			console.error('Login error:', error);
-			const errorMsg = error.response?.data?.error || 
-							error.message || 
-							"Identifiants invalides ou serveur indisponible.";
-			setAlertConfig({ 
-				show: true, 
-				msg: errorMsg, 
-				variant: 'danger' 
-			});
+			const errorMsg = getErrorMessage(error) || "Identifiants invalides ou serveur indisponible.";
+			setAlertConfig({ show: true, msg: errorMsg, variant: 'danger' });
 		} finally {
 			setIsLoading(false);
 		}

@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { AiOutlineCalendar, AiOutlineUser, AiOutlineMenuUnfold } from "react-icons/ai";
+import { AiOutlineCalendar, AiOutlineMenuUnfold } from "react-icons/ai";
 import { useAuth } from "../../context/AuthContext";
 import { getImageUrl } from "../../lib/constant/constant";
 

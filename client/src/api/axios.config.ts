@@ -1,8 +1,12 @@
 /// <reference types="vite/client" />
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+const isDev = import.meta.env.DEV;
+const baseUrl = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || "https://fizanakara-application.onrender.com");
+
+// Instance UNIQUE avec baseURL cohérente
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://fizanakara-application.onrender.com/api",
+  baseURL: isDev ? '/api' : (baseUrl + "/api"), // TOUJOURS avec /api
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -10,48 +14,52 @@ const api = axios.create({
   },
 });
 
+// Interceptor pour ajouter le token JWT
 api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('accessToken');
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem('accessToken');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: unknown) => Promise.reject(error)
 );
 
+// Interceptor pour rafraîchir le token
 api.interceptors.response.use(
-    (response) => response,
-    async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  (response: any) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
-            try {
-                const refreshToken = localStorage.getItem('refreshToken');
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await api.post('/refresh', { 
+          refreshToken 
+        });
 
-                const response = await axios.post(`${api.defaults.baseURL}/refresh`, { 
-                    refreshToken 
-                });
-
-                const { accessToken } = response.data;
-                localStorage.setItem('accessToken', accessToken);
-                if (originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-                }
-                return api(originalRequest);
-            } catch (refreshError) {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = '/login'; 
-                return Promise.reject(refreshError);
-            }
+        const { accessToken } = response.data;
+        localStorage.setItem('accessToken', accessToken);
+        
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
-
-        return Promise.reject(error);
+        
+        return api(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default api;
+// Supprimer authApi - utiliser api partout

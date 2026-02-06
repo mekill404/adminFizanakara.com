@@ -4,7 +4,7 @@ import {
     ContributionResponseModel, 
     ContributionUpdateModel,
     ContributionYearModel 
-} from "../types/models/contribution.models.types";
+} from "../lib/types/models/contribution.models.types";
 
 const ContributionService = {
     /**
