@@ -1,4 +1,4 @@
-import api from '../api/axios.config'; // Utiliser api, pas authApi
+import api from '../api/axios.config'; 
 import {
     LoginRequestModel,
     RegisterRequestModel,
@@ -8,7 +8,6 @@ import {
 
 export const AuthService = {
     login: async (credentials: LoginRequestModel) => {
-        // POST sur /api/login (api ajoute déjà /api)
         const response = await api.post('/login', credentials);
         if (response.data.accessToken) {
             localStorage.setItem('accessToken', response.data.accessToken);

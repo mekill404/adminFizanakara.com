@@ -1,4 +1,4 @@
-import api from "../api/axios.config"; // Utiliser api, pas authApi
+import api from "../api/axios.config";
 import { 
     AdminResponseModel, 
     LoginRequestModel, 

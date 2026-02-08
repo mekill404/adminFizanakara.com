@@ -1,12 +1,9 @@
 /// <reference types="vite/client" />
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const isDev = import.meta.env.DEV;
-const baseUrl = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || "https://fizanakara-application.onrender.com");
-
 // Instance UNIQUE avec baseURL cohérente
 const api = axios.create({
-  baseURL: isDev ? '/api' : (baseUrl + "/api"), // TOUJOURS avec /api
+  baseURL: 'http://localhost:3000',
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
